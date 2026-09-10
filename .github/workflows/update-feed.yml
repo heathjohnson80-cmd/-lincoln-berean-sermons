@@ -1,1 +1,40 @@
+name: Update Lincoln Berean sermon feed
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 12 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  build-feed:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install scraper dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Build complete sermon feed
+        run: python build_feed.py
+
+      - name: Commit updated feed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lincoln-berean-archive.xml feed-build-report.json
+          if git diff --cached --quiet; then
+            echo "No feed changes."
+          else
+            git commit -m "Update complete Lincoln Berean sermon feed"
+            git push
+          fi
